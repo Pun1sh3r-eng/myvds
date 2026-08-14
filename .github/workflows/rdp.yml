@@ -1,0 +1,33 @@
+name: Windows RDP
+
+on: [workflow_dispatch] # İsteğe bağlı olarak elle başlatmak için
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: ngrok Indir
+      run: Invoke-WebRequest https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+
+    - name: ngrok Cikar
+      run: Expand-Archive ngrok.zip
+
+    - name: Auth Yap
+      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+
+    - name: Uzaktan Baglantiyi (RDP) Ac
+      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+
+    - name: Guvenlik Duvarina Izin Ver
+      run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+
+    - name: Kullanici Kimlik Dogrulamasini Ayarla
+      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+
+    - name: Kullanici Sifresi Olustur
+      run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
+
+    - name: Tunnel Olustur ve Baslat
+      run: .\ngrok\ngrok.exe tcp 3389
