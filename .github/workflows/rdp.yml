@@ -6,17 +6,14 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-    - name: Uzaktan Baglantiyi (RDP) Ac
-      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+    - name: Ayarlar
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+        Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
 
-    - name: Guvenlik Duvarina Izin Ver
-      run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-
-    - name: Kullanici Kimlik Dogrulamasini Ayarla
-      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
-
-    - name: Kullanici Sifresi Olustur
-      run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
-
-    - name: Tunnel Olustur (Pinggy - Kartsiz)
-      run: ssh -p 443 -R0:localhost:3389 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 a.pinggy.io
+    - name: Tunnel Baslat (Hata Yakalama Modu)
+      run: |
+        echo "Tünel başlatılıyor..."
+        ssh -p 443 -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R0:localhost:3389 a.pinggy.io || echo "TÜNEL BAĞLANTISI BAŞARISIZ OLDU!"
