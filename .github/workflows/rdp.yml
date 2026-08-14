@@ -6,14 +6,6 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-    - name: ngrok Kur (Kırılmaz Yöntem)
-      run: choco install ngrok -y
-
-    - name: Auth Yap
-      run: ngrok authtoken $Env:NGROK_AUTH_TOKEN
-      env:
-        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-
     - name: Uzaktan Baglantiyi (RDP) Ac
       run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
 
@@ -26,5 +18,5 @@ jobs:
     - name: Kullanici Sifresi Olustur
       run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
 
-    - name: Tunnel Olustur ve Baslat
-      run: ngrok tcp 3389
+    - name: Tunnel Olustur (Pinggy - Kartsiz)
+      run: ssh -p 443 -R0:localhost:3389 -o StrictHostKeyChecking=no -o ServerAliveInterval=30 a.pinggy.io
